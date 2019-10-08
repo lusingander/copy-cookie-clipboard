@@ -1,29 +1,29 @@
-let copyToClipboard = (str) => {
-  let tmp = document.createElement('textarea');
+const copyToClipboard = (str) => {
+  const tmp = document.createElement('textarea');
   tmp.value = str;
   document.body.appendChild(tmp);
   tmp.select();
-  let success = document.execCommand('copy');
+  const success = document.execCommand('copy');
   tmp.parentElement.removeChild(tmp);
   return success;
 }
 
-let pid = chrome.contextMenus.create({
+const pid = chrome.contextMenus.create({
     title: "Copy Cookie Clipboard",
     contexts: ["all"],
     type: "normal",
 });
 
-let menuIds = [];
+const menuIds = [];
 
-let clearChildMenus = () => {
+const clearChildMenus = () => {
   menuIds.forEach(id => {
     chrome.contextMenus.remove(id);
   });
   menuIds.length = 0;
 };
 
-let createChildMenu = (pid, cookie) => {
+const createChildMenu = (pid, cookie) => {
   return chrome.contextMenus.create({
       title: cookie.name,
       parentId: pid,
@@ -35,17 +35,24 @@ let createChildMenu = (pid, cookie) => {
   });
 };
 
+const parseDomainFromURL = (url) => {
+  return new URL(url).hostname
+};
+
 chrome.tabs.onActivated.addListener((activeInfo) => {
   clearChildMenus();
 
   chrome.tabs.get(activeInfo.tabId, (tab) => {
-    let current = tab.url;
+    const current = tab.url;
+    const domain = parseDomainFromURL(current)
     chrome.tabs.getSelected(null, (tab) => {
       chrome.cookies.getAll({
         url: current
       }, cookies => {
-        cookies.forEach(cookie => {
-          let cid = createChildMenu(pid, cookie);
+        cookies.filter(cookie =>
+          cookie.domain === domain
+        ).forEach(cookie => {
+          const cid = createChildMenu(pid, cookie);
           menuIds.push(cid);
         });
       });
