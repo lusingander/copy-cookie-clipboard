@@ -39,10 +39,8 @@ const parseDomainFromURL = (url) => {
   return new URL(url).hostname
 };
 
-chrome.tabs.onActivated.addListener((activeInfo) => {
-  clearChildMenus();
-
-  chrome.tabs.get(activeInfo.tabId, (tab) => {
+const createMenus = (tabId) => {
+  chrome.tabs.get(tabId, (tab) => {
     const current = tab.url;
     const domain = parseDomainFromURL(current)
     chrome.tabs.getSelected(null, (tab) => {
@@ -58,5 +56,19 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
       });
     });
   });
+};
+
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  clearChildMenus();
+  createMenus(activeInfo.tabId);
 });
 
+chrome.tabs.onUpdated.addListener((tabId) => {
+  clearChildMenus();
+  createMenus(tabId);
+});
+
+chrome.tabs.onCreated.addListener((tab) => {
+  clearChildMenus();
+  createMenus(tab.id);
+});
